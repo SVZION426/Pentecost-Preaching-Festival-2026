@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Harvest — setup and deploy
 
 Two files. `schema.sql` builds the database, `index.html` is the whole app.
@@ -84,3 +85,7 @@ number worth watching — it's the difference between a baptism and a disciple.
 
 Both wordings are in one place, the `DEFS` object at the top of the script. They appear in the
 logging sheets. Change them there and they change everywhere.
+=======
+# Pentecost-Festival-2026
+this is a web app to be used for our preaching festival
+>>>>>>> aa134106abd5e32850aefd14597d73374114adfc
