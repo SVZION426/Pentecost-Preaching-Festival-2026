@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12203A">
+<title>Harvest — preaching tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12203A; --ink-2:#4B5B74; --ink-3:#7C8AA0;
+  --paper:#FFFFFF; --mist:#F1F4F9; --line:#DCE3EC; --line-2:#EDF1F6;
+  --preach:#4A6FA5; --valid:#0E8A7D; --fruit:#C4790F; --retained:#B22E4C;
+  --preach-bg:#EBF1F9; --valid-bg:#E3F5F2; --fruit-bg:#FBF0DE; --retained-bg:#FAE8EC;
+  --r:14px; --r-sm:10px;
+  --shell:520px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:Inter,system-ui,sans-serif;
+  color:var(--ink); background:var(--mist);
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+h1,h2,h3,.num{font-family:Archivo,system-ui,sans-serif;letter-spacing:-.02em}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--preach);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.shell{max-width:var(--shell);margin:0 auto;min-height:100%;background:var(--paper);
+  display:flex;flex-direction:column;box-shadow:0 0 0 1px var(--line)}
+.screen{flex:1;padding:20px 18px 104px;display:none}
+.screen.on{display:block}
+
+/* ---------- header ---------- */
+.top{position:sticky;top:0;z-index:20;background:var(--paper);
+  border-bottom:1px solid var(--line-2);padding:14px 18px;
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.top h1{font-size:19px;font-weight:700}
+.top .who{font-size:13px;color:var(--ink-3);font-weight:500}
+.top .who b{color:var(--ink-2);font-weight:600}
+
+/* ---------- stage rail: the hero ---------- */
+.rail{display:flex;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);margin-bottom:6px}
+.rail div{flex:1;padding:13px 10px;text-align:center;border-right:1px solid var(--line)}
+.rail div:last-child{border-right:0}
+.rail .n{font-family:Archivo;font-size:26px;font-weight:700;line-height:1.05;display:block}
+.rail .l{font-size:10.5px;font-weight:600;margin-top:4px;display:block;color:var(--ink-2)}
+.s-preach{background:var(--preach-bg)} .s-preach .n{color:var(--preach)}
+.s-valid{background:var(--valid-bg)}  .s-valid .n{color:var(--valid)}
+.s-fruit{background:var(--fruit-bg)}  .s-fruit .n{color:var(--fruit)}
+.s-ret{background:var(--retained-bg)} .s-ret .n{color:var(--retained)}
+.rail-cap{font-size:11.5px;color:var(--ink-3);text-align:center;margin-bottom:20px}
+
+/* ---------- points ---------- */
+.pts{display:flex;align-items:flex-end;justify-content:space-between;
+  padding:16px 0 12px;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);margin-bottom:20px}
+.pts .big{font-family:Archivo;font-size:38px;font-weight:700;line-height:1}
+.pts .lab{font-size:12.5px;color:var(--ink-3);margin-top:3px}
+.pts .pct{text-align:right;font-size:13px;color:var(--ink-2);font-weight:600}
+
+/* ---------- goal bars ---------- */
+.goal{margin-bottom:15px}
+.goal .r1{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.goal .nm{font-size:14px;font-weight:600}
+.goal .ct{font-size:13px;color:var(--ink-2);font-weight:600}
+.goal .ct b{font-family:Archivo;font-weight:700;font-size:15px;color:var(--ink)}
+.bar{height:9px;border-radius:99px;background:var(--line-2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.done .nm::after{content:" ✓";color:var(--valid);font-weight:700}
+
+/* ---------- quick log ---------- */
+.qtitle{font-size:12.5px;font-weight:600;color:var(--ink-3);margin:26px 0 10px}
+.q-preach{width:100%;display:flex;align-items:center;justify-content:space-between;
+  background:var(--preach);color:#fff;border-radius:var(--r);padding:17px 20px;margin-bottom:10px}
+.q-preach span{font-size:16px;font-weight:600}
+.q-preach b{font-family:Archivo;font-size:24px;font-weight:700}
+.q-preach:active{transform:scale(.985)}
+.q-row{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.q-row button{border:1.5px solid var(--line);border-radius:var(--r-sm);padding:13px 6px;
+  font-size:13px;font-weight:600;background:var(--paper)}
+.q-row button:active{background:var(--mist)}
+.q-row .b-valid{border-color:#A9DCD5;color:var(--valid)}
+.q-row .b-fruit{border-color:#EBCE9C;color:var(--fruit)}
+.q-row .b-ret{border-color:#EEBBC6;color:var(--retained)}
+.backdate{width:100%;text-align:center;font-size:12.5px;color:var(--ink-3);padding:14px 0 0;font-weight:500}
+
+/* ---------- lists / cards ---------- */
+.card{border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px;background:var(--paper)}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-2)}
+.row:last-child{border-bottom:0}
+.row .grow{flex:1;min-width:0}
+.row .nm{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .sub{font-size:12px;color:var(--ink-3);margin-top:2px}
+.row .val{font-family:Archivo;font-size:17px;font-weight:700;text-align:right}
+.row .val small{display:block;font-family:Inter;font-size:11px;font-weight:500;color:var(--ink-3)}
+.rank{width:22px;font-family:Archivo;font-size:13px;font-weight:700;color:var(--ink-3);text-align:right}
+
+.ghead{display:flex;align-items:center;justify-content:space-between;
+  margin:22px 0 4px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.ghead h2{font-size:15px;font-weight:700}
+.ghead .tot{font-family:Archivo;font-size:15px;font-weight:700}
+.ghead .tot small{font-family:Inter;font-size:11px;font-weight:500;color:var(--ink-3);margin-left:4px}
+
+.pill{display:inline-block;font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:99px}
+.p-valid{background:var(--valid-bg);color:var(--valid)}
+.p-fruit{background:var(--fruit-bg);color:var(--fruit)}
+.p-ret{background:var(--retained-bg);color:var(--retained)}
+.p-quiet{background:var(--line-2);color:var(--ink-3)}
+.p-preach{background:var(--preach-bg);color:var(--preach)}
+
+.mini{height:6px;border-radius:99px;background:var(--line-2);margin-top:7px;overflow:hidden}
+.mini i{display:block;height:100%;background:var(--ink);border-radius:99px}
+
+.seg{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;margin-bottom:6px}
+.seg button{flex:1;padding:9px 4px;font-size:12.5px;font-weight:600;color:var(--ink-3);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:#fff}
+
+.empty{text-align:center;padding:44px 20px;color:var(--ink-3)}
+.empty b{display:block;font-family:Archivo;font-size:16px;color:var(--ink-2);margin-bottom:6px;font-weight:600}
+.empty span{font-size:13.5px;line-height:1.5}
+
+/* ---------- tabs ---------- */
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--paper);
+  border-top:1px solid var(--line);display:flex;max-width:var(--shell);margin:0 auto;
+  padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;padding:9px 2px 11px;font-size:10.5px;font-weight:600;color:var(--ink-3);
+  display:flex;flex-direction:column;align-items:center;gap:4px}
+.tabs button.on{color:var(--ink)}
+.tabs svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.9;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+.tabs button.on svg{stroke-width:2.3}
+
+/* ---------- login ---------- */
+.login{padding:38px 22px 40px}
+.login h1{font-size:30px;font-weight:700;line-height:1.1}
+.login .sub{font-size:14px;color:var(--ink-3);margin:10px 0 30px;line-height:1.5}
+.who-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.who-grid button{border:1.5px solid var(--line);border-radius:var(--r-sm);padding:15px 12px;text-align:left;background:var(--paper)}
+.who-grid button:active{border-color:var(--ink)}
+.who-grid .n{font-size:14.5px;font-weight:600;display:block}
+.who-grid .g{font-size:11px;color:var(--ink-3);margin-top:3px;display:block}
+.pinbox{text-align:center}
+.pindots{display:flex;gap:13px;justify-content:center;margin:24px 0 28px}
+.pindots i{width:13px;height:13px;border-radius:99px;border:2px solid var(--line);transition:all .15s}
+.pindots i.f{background:var(--ink);border-color:var(--ink)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;max-width:280px;margin:0 auto}
+.pad button{aspect-ratio:1.5;border-radius:var(--r-sm);background:var(--mist);
+  font-family:Archivo;font-size:23px;font-weight:600}
+.pad button:active{background:var(--line)}
+.pad .alt{font-family:Inter;font-size:13px;font-weight:600;background:none;color:var(--ink-3)}
+
+/* ---------- sheet ---------- */
+.scrim{position:fixed;inset:0;background:rgba(12,20,34,.5);z-index:40;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--paper);
+  border-radius:22px 22px 0 0;padding:8px 20px calc(24px + env(safe-area-inset-bottom));
+  max-width:var(--shell);margin:0 auto;max-height:88vh;overflow-y:auto;
+  transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.2,1)}
+.sheet.on{transform:translateY(0)}
+.grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:6px auto 16px}
+.sheet h2{font-size:18px;font-weight:700;margin-bottom:5px}
+.sheet .hint{font-size:13px;color:var(--ink-3);line-height:1.5;margin-bottom:18px}
+label.f{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2);margin:14px 0 6px}
+.inp{width:100%;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:12px 13px;font-size:15px;background:var(--paper)}
+.inp:focus{border-color:var(--preach);outline:none}
+.btn{width:100%;background:var(--ink);color:#fff;border-radius:var(--r-sm);padding:15px;
+  font-size:15px;font-weight:600;margin-top:20px}
+.btn:disabled{opacity:.45}
+.btn.ghost{background:none;color:var(--ink-3);border:1.5px solid var(--line);margin-top:9px}
+.btn.danger{background:var(--retained)}
+.pick{border:1.5px solid var(--line);border-radius:var(--r-sm);padding:12px 13px;margin-bottom:8px;
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left}
+.pick.sel{border-color:var(--ink);background:var(--mist)}
+.pick .nm{flex:1;font-size:14.5px;font-weight:600}
+
+/* ---------- misc ---------- */
+.toast{position:fixed;left:50%;bottom:84px;transform:translate(-50%,14px);z-index:60;
+  background:var(--ink);color:#fff;padding:12px 18px;border-radius:99px;font-size:13.5px;font-weight:500;
+  opacity:0;pointer-events:none;transition:all .22s;max-width:88vw;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:var(--retained)}
+.offline{background:var(--fruit-bg);color:#8A5409;font-size:12.5px;font-weight:600;
+  padding:9px 18px;text-align:center;display:none}
+.offline.on{display:block}
+.setup{padding:50px 24px;font-size:14px;line-height:1.65;color:var(--ink-2)}
+.setup code{background:var(--mist);padding:2px 6px;border-radius:5px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="offline" id="offline">Saved locally. Will sync when you're back online.</div>
+
+  <!-- LOGIN -->
+  <div id="login" class="login">
+    <h1>Harvest</h1>
+    <p class="sub" id="loginSub">Pick your name to start logging.</p>
+    <div id="whoGrid" class="who-grid"></div>
+    <div id="pinBox" class="pinbox" style="display:none">
+      <div class="pindots"><i></i><i></i><i></i><i></i></div>
+      <div class="pad" id="pad"></div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" style="display:none">
+    <div class="top">
+      <h1 id="screenTitle">Today</h1>
+      <div class="who" id="whoAmI"></div>
+    </div>
+
+    <section class="screen on" id="s-home"></section>
+    <section class="screen" id="s-team"></section>
+    <section class="screen" id="s-funnel"></section>
+    <section class="screen" id="s-history"></section>
+    <section class="screen" id="s-admin"></section>
+
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ============================================================
+   CONFIG — paste your two Supabase values here, nothing else.
+   Project settings → API → Project URL and anon public key.
+   ============================================================ */
+const SUPABASE_URL  = "https://dmhnqgsjkktgkgxaorpi.supabase.co";
+const SUPABASE_ANON = "sb_publishable_TcG129wWIqs9QcFpIM3MFQ_Bw3qjxPH";
+
+/* ---------------------------------------------------------- */
+
+const CATS = [
+  { k:'preaching',  label:'Simple preaching', short:'Preached',  cls:'preach', goal:'goal_preaching',  count:'preaching_count'  },
+  { k:'valid',      label:'Valid',            short:'Valid',     cls:'valid',  goal:'goal_valid',      count:'valid_count'      },
+  { k:'baptism',    label:'Baptism',          short:'Fruit',     cls:'fruit',  goal:'goal_baptism',    count:'baptism_count'    },
+  { k:'attendance', label:'Attendance',       short:'Retained',  cls:'ret',    goal:'goal_attendance', count:'attendance_count' },
+];
+const DEFS = {
+  preaching : 'A single gospel conversation with one person, however brief.',
+  valid     : 'A person who accepted and began a Bible study.',
+  baptism   : 'A baptism resulting from your work.',
+  attendance: 'A fruit who kept a service after their baptism.',
+};
+const HEX = { preach:'#4A6FA5', valid:'#0E8A7D', fruit:'#C4790F', ret:'#B22E4C' };
+
+let sb = null, me = null, pin = null;
+let roster = [], stats = [], funnel = [], goals = [], pointVals = [];
+let month = monthKey(new Date());
+let tab = 'home', teamSort = 'points', pending = [];
+
+const $  = s => document.querySelector(s);
+const el = (t, c, h) => { const n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+const num = n => Number(n || 0).toLocaleString();
+
+function monthKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`; }
+function monthName(k){
+  const [y,m] = k.split('-').map(Number);
+  return new Date(y, m-1, 1).toLocaleDateString(undefined, { month:'long', year:'numeric' });
+}
+function today(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+function toast(msg, bad){
+  const t = $('#toast');
+  t.textContent = msg; t.className = 'toast on' + (bad ? ' bad' : '');
+  clearTimeout(t._t); t._t = setTimeout(() => t.className = 'toast', 2600);
+}
+
+/* ---------- data layer ---------- */
+
+async function rpc(fn, args){
+  const { data, error } = await sb.rpc(fn, args);
+  if (error) throw new Error(cleanErr(error.message));
+  return data;
+}
+function cleanErr(m){
+  if (!m) return 'Something went wrong. Try again.';
+  return m.replace(/^.*?:\s*/, '').replace(/\s*\(SQLSTATE.*\)$/, '');
+}
+
+async function loadAll(){
+  const [r, g, p] = await Promise.all([
+    sb.from('v_members_public').select('*').eq('is_active', true).order('name'),
+    sb.from('goals').select('*'),
+    sb.from('point_values').select('*'),
+  ]);
+  roster = r.data || []; goals = g.data || []; pointVals = p.data || [];
+  await loadStats();
+}
+async function loadStats(){
+  const [s, f] = await Promise.all([
+    sb.from('v_monthly_stats').select('*').eq('month', month),
+    sb.from('v_funnel').select('*'),
+  ]);
+  stats = s.data || []; funnel = f.data || [];
+}
+
+function pointFor(cat){
+  const rows = pointVals.filter(p => p.category === cat).sort((a,b) => a.effective_from < b.effective_from ? 1 : -1);
+  return rows.length ? rows[0].points : 0;
+}
+function targetFor(group, cat){
+  const rows = goals.filter(g => g.group_name === group && g.category === cat)
+                    .sort((a,b) => a.effective_from < b.effective_from ? 1 : -1);
+  return rows.length ? rows[0].target : 0;
+}
+function maxPoints(group){
+  return CATS.reduce((s,c) => s + targetFor(group, c.k) * pointFor(c.k), 0);
+}
+function statsFor(id){
+  const row = stats.find(s => s.member_id === id);
+  if (row) return row;
+  const m = roster.find(r => r.id === id) || { group_name:'member' };
+  const blank = { member_id:id, points:0, group_name:m.group_name };
+  CATS.forEach(c => { blank[c.count] = 0; blank[c.goal] = targetFor(m.group_name, c.k); });
+  return blank;
+}
+
+/* ---------- offline queue ---------- */
+
+function loadPending(){ try { pending = JSON.parse(localStorage.getItem('pending') || '[]'); } catch { pending = []; } }
+function savePending(){ localStorage.setItem('pending', JSON.stringify(pending)); $('#offline').className = 'offline' + (pending.length ? ' on' : ''); }
+function queue(fn, args){ pending.push({ fn, args }); savePending(); }
+async function flush(){
+  if (!pending.length || !navigator.onLine) return;
+  const batch = [...pending]; pending = []; savePending();
+  for (const job of batch){
+    try { await rpc(job.fn, { ...job.args, p_member_id: me.id, p_pin: pin }); }
+    catch { pending.push(job); }
+  }
+  savePending();
+  if (!pending.length){ await loadStats(); render(); toast('Synced'); }
+}
+window.addEventListener('online', flush);
+
+/* ---------- login ---------- */
+
+async function boot(){
+  if (SUPABASE_URL.startsWith('YOUR_')){
+    $('#login').innerHTML =
+      '<div class="setup"><h1 style="font-size:22px;margin-bottom:14px">Nearly there</h1>' +
+      'Open <code>index.html</code>, find the CONFIG block at the top of the script, ' +
+      'and paste in your Supabase project URL and anon key. Then reload.</div>';
+    return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  loadPending();
+  try {
+    const { data, error } = await sb.from('v_members_public').select('*').eq('is_active', true).order('name');
+    if (error) throw error;
+    roster = data || [];
+  } catch {
+    $('#loginSub').textContent = "Can't reach the database. Check your connection and reload.";
+    return;
+  }
+  if (!roster.length){
+    $('#loginSub').textContent = 'No one has been added yet. Run the schema file first, then sign in as the admin it creates.';
+    return;
+  }
+  const grid = $('#whoGrid');
+  roster.forEach(m => {
+    const b = el('button', '', `<span class="n">${esc(m.name)}</span><span class="g">${m.group_name === 'evangelist' ? 'Evangelist' : 'Member'}</span>`);
+    b.onclick = () => askPin(m);
+    grid.appendChild(b);
+  });
+}
+
+function askPin(m){
+  $('#whoGrid').style.display = 'none';
+  $('#pinBox').style.display = 'block';
+  $('#login').querySelector('h1').textContent = m.name;
+  $('#loginSub').textContent = 'Enter your 4-digit PIN.';
+  let buf = '';
+  const dots = $('#pinBox').querySelectorAll('.pindots i');
+  const paint = () => dots.forEach((d,i) => d.className = i < buf.length ? 'f' : '');
+  const pad = $('#pad'); pad.innerHTML = '';
+  ['1','2','3','4','5','6','7','8','9','back','0','go'].forEach(k => {
+    const b = el('button', k === 'back' || k === 'go' ? 'alt' : '', k === 'back' ? 'Delete' : k === 'go' ? 'Back' : k);
+    b.onclick = async () => {
+      if (k === 'go'){ location.reload(); return; }
+      if (k === 'back'){ buf = buf.slice(0,-1); paint(); return; }
+      if (buf.length >= 4) return;
+      buf += k; paint();
+      if (buf.length === 4){
+        try {
+          const res = await rpc('login', { p_member_id: m.id, p_pin: buf });
+          me = res; pin = buf;
+          $('#login').style.display = 'none'; $('#app').style.display = 'block';
+          await start();
+        } catch (e){
+          toast(e.message, true); buf = ''; paint();
+        }
+      }
+    };
+    pad.appendChild(b);
+  });
+  paint();
+}
+
+async function start(){
+  $('#whoAmI').innerHTML = `<b>${esc(me.name)}</b> · ${me.group_name === 'evangelist' ? 'Evangelist' : 'Member'}`;
+  buildTabs();
+  await loadAll();
+  render();
+  flush();
+  sb.channel('live')
+    .on('postgres_changes', { event:'*', schema:'public', table:'preaching_entries' }, refresh)
+    .on('postgres_changes', { event:'*', schema:'public', table:'contact_events' }, refresh)
+    .subscribe();
+  setInterval(() => { const k = monthKey(new Date()); if (k !== month && tab !== 'history'){ month = k; refresh(); } }, 60000);
+}
+let refreshTimer;
+function refresh(){ clearTimeout(refreshTimer); refreshTimer = setTimeout(async () => { await loadStats(); render(); }, 350); }
+
+/* ---------- tabs ---------- */
+
+const ICONS = {
+  home:   '<path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/>',
+  team:   '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M17 11.5a2.8 2.8 0 1 0 0-5.6"/><path d="M18 20c0-2.6-1-4.3-2.5-5.2"/>',
+  funnel: '<path d="M3.5 5h17l-6.5 7.5V20l-4-2.2v-5.3z"/>',
+  history:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3.2 2"/>',
+  admin:  '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/>',
+};
+const TABS = [['home','Today'],['team','Team'],['funnel','Funnel'],['history','History']];
+
+function buildTabs(){
+  const nav = $('#tabs'); nav.innerHTML = '';
+  const list = me.is_admin ? [...TABS, ['admin','Admin']] : TABS;
+  list.forEach(([k,label]) => {
+    const b = el('button', k === tab ? 'on' : '', `<svg viewBox="0 0 24 24">${ICONS[k]}</svg>${label}`);
+    b.onclick = () => { tab = k; document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+      $('#s-' + k).classList.add('on'); buildTabs(); $('#screenTitle').textContent = label; window.scrollTo(0,0); render(); };
+    nav.appendChild(b);
+  });
+}
+
+/* ---------- render ---------- */
+
+function render(){
+  if (tab === 'home')    renderHome();
+  if (tab === 'team')    renderTeam();
+  if (tab === 'funnel')  renderFunnel();
+  if (tab === 'history') renderHistory();
+  if (tab === 'admin')   renderAdmin();
+}
+
+function renderHome(){
+  const s = statsFor(me.id);
+  const mine = funnel.filter(f => f.member_id === me.id);
+  const max = maxPoints(me.group_name) || 1;
+  const pct = Math.min(100, Math.round(s.points / max * 100));
+  const box = $('#s-home'); box.innerHTML = '';
+
+  box.appendChild(el('div','rail',
+    `<div class="s-preach"><span class="n">${num(s.preaching_count)}</span><span class="l">Preached</span></div>
+     <div class="s-valid"><span class="n">${num(s.valid_count)}</span><span class="l">Valid</span></div>
+     <div class="s-fruit"><span class="n">${num(s.baptism_count)}</span><span class="l">Fruit</span></div>
+     <div class="s-ret"><span class="n">${num(s.attendance_count)}</span><span class="l">Retained</span></div>`));
+  box.appendChild(el('p','rail-cap', `${monthName(month)} · ${mine.length} ${mine.length === 1 ? 'person' : 'people'} in your funnel overall`));
+
+  box.appendChild(el('div','pts',
+    `<div><div class="big">${num(s.points)}</div><div class="lab">points this month</div></div>
+     <div class="pct">${pct}% of ${num(max)}</div>`));
+
+  CATS.forEach(c => {
+    const have = s[c.count] || 0, want = s[c.goal] ?? targetFor(me.group_name, c.k);
+    if (!want && c.k === 'attendance'){
+      box.appendChild(el('div','goal',
+        `<div class="r1"><span class="nm">${c.label}</span><span class="ct"><b>${num(have)}</b> · no target</span></div>
+         <div class="bar"><i style="width:${have ? 100 : 0}%;background:${HEX[c.cls]}"></i></div>`));
+      return;
+    }
+    const p = want ? Math.min(100, have / want * 100) : 0;
+    box.appendChild(el('div', 'goal' + (want && have >= want ? ' done' : ''),
+      `<div class="r1"><span class="nm">${c.label}</span><span class="ct"><b>${num(have)}</b> / ${num(want)}</span></div>
+       <div class="bar"><i style="width:${p}%;background:${HEX[c.cls]}"></i></div>`));
+  });
+
+  box.appendChild(el('p','qtitle','Log something'));
+  const bp = el('button','q-preach','<span>Simple preaching</span><b>+1</b>');
+  bp.onclick = () => quickPreach(bp);
+  box.appendChild(bp);
+
+  const row = el('div','q-row');
+  [['valid','Valid','b-valid'],['baptism','Baptism','b-fruit'],['attendance','Attendance','b-ret']].forEach(([k,label,cls]) => {
+    const b = el('button', cls, label);
+    b.onclick = () => openContactSheet(k);
+    row.appendChild(b);
+  });
+  box.appendChild(row);
+
+  const bd = el('button','backdate','Log for another day');
+  bd.onclick = openBackdate;
+  box.appendChild(bd);
+}
+
+async function quickPreach(btn){
+  const s = statsFor(me.id);
+  const row = stats.find(x => x.member_id === me.id);
+  if (row){ row.preaching_count++; row.points += pointFor('preaching'); } else { stats.push({ ...s, preaching_count:1, points:pointFor('preaching') }); }
+  renderHome();
+  btn.blur();
+  if (!navigator.onLine){ queue('log_preaching', { p_count:1, p_date:today() }); toast('Saved. Will sync later.'); return; }
+  try { await rpc('log_preaching', { p_member_id:me.id, p_pin:pin, p_count:1, p_date:today() }); }
+  catch (e){ queue('log_preaching', { p_count:1, p_date:today() }); toast(e.message + ' — queued', true); }
+}
+
+function renderTeam(){
+  const box = $('#s-team'); box.innerHTML = '';
+  const seg = el('div','seg');
+  [['points','Points'],['preaching_count','Preached'],['valid_count','Valid'],['baptism_count','Fruit'],['attendance_count','Retained']]
+    .forEach(([k,label]) => {
+      const b = el('button', teamSort === k ? 'on' : '', label);
+      b.onclick = () => { teamSort = k; renderTeam(); };
+      seg.appendChild(b);
+    });
+  box.appendChild(seg);
+  box.appendChild(el('p','rail-cap', monthName(month)));
+
+  [['evangelist','Evangelists'],['member','Members']].forEach(([g,label]) => {
+    const people = roster.filter(m => m.group_name === g)
+      .map(m => ({ ...m, s: statsFor(m.id) }))
+      .sort((a,b) => (b.s[teamSort] || 0) - (a.s[teamSort] || 0));
+    if (!people.length) return;
+    const total = people.reduce((t,p) => t + (p.s.points || 0), 0);
+    const max = maxPoints(g) * people.length || 1;
+    box.appendChild(el('div','ghead',
+      `<h2>${label}</h2><div class="tot">${num(total)}<small>of ${num(max)} pts</small></div>`));
+    const card = el('div','card');
+    people.forEach((p,i) => {
+      const pm = maxPoints(g) || 1;
+      const pct = Math.min(100, Math.round((p.s.points || 0) / pm * 100));
+      const detail = teamSort === 'points'
+        ? CATS.map(c => `${p.s[c.count] || 0} ${c.short.toLowerCase()}`).join(' · ')
+        : `${num(p.s.points)} points`;
+      card.appendChild(el('div','row',
+        `<div class="rank">${i+1}</div>
+         <div class="grow"><div class="nm">${esc(p.name)}${p.id === me.id ? ' · you' : ''}</div>
+           <div class="sub">${detail}</div><div class="mini"><i style="width:${pct}%"></i></div></div>
+         <div class="val">${num(p.s[teamSort])}<small>${pct}%</small></div>`));
+    });
+    box.appendChild(card);
+  });
+  box.appendChild(el('p','rail-cap','Groups have different targets, so the two lists are ranked separately.'));
+}
+
+function renderFunnel(){
+  const box = $('#s-funnel'); box.innerHTML = '';
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 35);
+  const quiet = f => f.stage === 'retained' && f.last_attended && new Date(f.last_attended) < cutoff;
+
+  [['evangelist','Evangelists'],['member','Members']].forEach(([g,label]) => {
+    const rows = funnel.filter(f => f.group_name === g);
+    if (!rows.length) return;
+    const v = rows.length;
+    const b = rows.filter(r => r.stage !== 'valid').length;
+    const r = rows.filter(r => r.stage === 'retained').length;
+    box.appendChild(el('div','ghead', `<h2>${label}</h2><div class="tot">${v}<small>in the funnel</small></div>`));
+    box.appendChild(el('div','rail',
+      `<div class="s-valid"><span class="n">${v}</span><span class="l">Valid</span></div>
+       <div class="s-fruit"><span class="n">${b}</span><span class="l">Baptized</span></div>
+       <div class="s-ret"><span class="n">${r}</span><span class="l">Retained</span></div>`));
+    box.appendChild(el('p','rail-cap',
+      v ? `${Math.round(b/v*100)}% of valids reached baptism · ${b ? Math.round(r/b*100) : 0}% of fruit still attending` : ''));
+  });
+
+  const mine = funnel.filter(f => f.member_id === me.id);
+  if (!mine.length){
+    box.appendChild(el('div','empty','<b>Nobody here yet</b><span>Log a valid on the Today screen and the person will appear here as they move through the stages.</span>'));
+    return;
+  }
+  box.appendChild(el('div','ghead','<h2>Your people</h2>'));
+  const card = el('div','card'); card.id = 'myFunnel';
+  box.appendChild(card);
+  fillMyFunnel(mine, quiet);
+}
+
+async function fillMyFunnel(mine, quiet){
+  const card = $('#myFunnel'); if (!card) return;
+  card.innerHTML = '<div class="row"><div class="grow"><div class="sub">Loading names…</div></div></div>';
+  let list = [];
+  try { list = await rpc('my_contacts', { p_member_id: me.id, p_pin: pin }); }
+  catch (e){ card.innerHTML = `<div class="row"><div class="grow"><div class="sub">${esc(e.message)}</div></div></div>`; return; }
+  card.innerHTML = '';
+  list.forEach(c => {
+    const f = { stage:c.stage, last_attended:c.last_attended };
+    const isQuiet = quiet(f);
+    const pill = c.stage === 'retained' ? (isQuiet ? ['p-quiet','Gone quiet'] : ['p-ret','Retained'])
+               : c.stage === 'baptized' ? ['p-fruit','Baptized'] : ['p-valid','Valid'];
+    const sub = c.last_attended ? `Last attended ${new Date(c.last_attended).toLocaleDateString(undefined,{month:'short',day:'numeric'})}` : 'No attendance yet';
+    card.appendChild(el('div','row',
+      `<div class="grow"><div class="nm">${esc(c.name)}</div><div class="sub">${sub}</div></div>
+       <span class="pill ${pill[0]}">${pill[1]}</span>`));
+  });
+  card.appendChild(el('p','rail-cap','Only you and the admin can see these names.'));
+}
+
+async function renderHistory(){
+  const box = $('#s-history'); box.innerHTML = '';
+  const sel = el('select','inp');
+  for (let i = 0; i < 12; i++){
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+    const k = monthKey(d);
+    const o = el('option','', monthName(k)); o.value = k; sel.appendChild(o);
+  }
+  sel.value = month;
+  sel.onchange = async () => { month = sel.value; await loadStats(); render(); };
+  box.appendChild(sel);
+  const list = el('div','card','<div class="row"><div class="grow"><div class="sub">Loading…</div></div></div>');
+  box.appendChild(list);
+
+  let rows = [];
+  try { rows = await rpc('my_history', { p_member_id: me.id, p_pin: pin, p_month: month }); }
+  catch (e){ list.innerHTML = `<div class="row"><div class="grow"><div class="sub">${esc(e.message)}</div></div></div>`; return; }
+
+  if (!rows.length){
+    box.removeChild(list);
+    box.appendChild(el('div','empty','<b>Nothing logged this month</b><span>Anything you log on the Today screen shows up here, where you can correct or remove it.</span>'));
+    return;
+  }
+  list.innerHTML = '';
+  rows.forEach(r => {
+    const cat = CATS.find(c => c.k === r.category);
+    const d = new Date(r.on_date + 'T00:00').toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+    const label = r.category === 'preaching' ? `${r.count} simple preaching` : `${cat.label}${r.who ? ' · ' + esc(r.who) : ''}`;
+    const row = el('div','row',
+      `<div class="grow"><div class="nm">${label}</div><div class="sub">${d}${r.note ? ' · ' + esc(r.note) : ''}</div></div>
+       <span class="pill p-${cat.cls}">+${num(r.category === 'preaching' ? r.count * pointFor('preaching') : pointFor(r.category))}</span>`);
+    row.style.cursor = 'pointer';
+    row.onclick = () => confirmDelete(r);
+    list.appendChild(row);
+  });
+  box.appendChild(el('p','rail-cap','Tap an entry to remove it.'));
+}
+
+function confirmDelete(r){
+  openSheet(`<h2>Remove this entry?</h2>
+    <p class="hint">${r.category === 'preaching' ? r.count + ' simple preaching' : CATS.find(c=>c.k===r.category).label + (r.who ? ' · ' + esc(r.who) : '')} on ${r.on_date}. Your points go back down by the same amount.</p>`,
+    [{ label:'Remove entry', cls:'btn danger', run: async () => {
+        await rpc('delete_entry', { p_member_id:me.id, p_pin:pin, p_id:r.id, p_kind: r.category === 'preaching' ? 'preaching' : 'contact' });
+        await loadStats(); closeSheet(); render(); toast('Removed');
+      }},
+     { label:'Keep it', cls:'btn ghost', run: closeSheet }]);
+}
+
+/* ---------- sheets ---------- */
+
+function openSheet(html, actions){
+  const s = $('#sheet');
+  s.innerHTML = '<div class="grab"></div>' + html;
+  (actions || []).forEach(a => {
+    const b = el('button', a.cls || 'btn', a.label);
+    b.onclick = async () => {
+      b.disabled = true;
+      try { await a.run(); } catch (e){ toast(e.message, true); b.disabled = false; }
+    };
+    s.appendChild(b);
+  });
+  $('#scrim').className = 'scrim on';
+  requestAnimationFrame(() => s.className = 'sheet on');
+}
+function closeSheet(){ $('#sheet').className = 'sheet'; $('#scrim').className = 'scrim'; }
+$('#scrim').onclick = closeSheet;
+
+async function openContactSheet(kind){
+  const cat = CATS.find(c => c.k === kind);
+  let list = [];
+  try { list = await rpc('my_contacts', { p_member_id: me.id, p_pin: pin }); }
+  catch (e){ return toast(e.message, true); }
+
+  const eligible = list.filter(c =>
+    kind === 'valid' ? false :
+    kind === 'baptism' ? c.stage === 'valid' : c.stage !== 'valid');
+
+  let chosen = null;
+  const body = `<h2>${cat.label}</h2><p class="hint">${DEFS[kind]}</p>` +
+    (kind === 'valid'
+      ? `<label class="f">Their name</label><input class="inp" id="newName" placeholder="First name and last initial" autocomplete="off">`
+      : eligible.length
+        ? `<label class="f">Who is this?</label><div id="picks"></div>`
+        : `<p class="hint">${kind === 'baptism'
+            ? 'No one is waiting at the valid stage. Log a valid first, then come back.'
+            : 'No one has been baptized yet. Attendance follows baptism.'}</p>`) +
+    (kind === 'valid' || eligible.length ? `<label class="f">Note (optional)</label><input class="inp" id="note" placeholder="Anything worth remembering" autocomplete="off">` : '');
+
+  const actions = (kind === 'valid' || eligible.length) ? [{
+    label: `Log ${cat.label.toLowerCase()}`, cls:'btn',
+    run: async () => {
+      const name = $('#newName') ? $('#newName').value.trim() : null;
+      if (kind === 'valid' && !name) return toast('Give the contact a name', true);
+      if (kind !== 'valid' && !chosen) return toast('Pick who this is', true);
+      await rpc('log_contact_event', {
+        p_member_id:me.id, p_pin:pin, p_event_type:kind,
+        p_contact_id: chosen, p_new_name: name,
+        p_date: today(), p_note: $('#note') ? $('#note').value : null });
+      await loadStats(); closeSheet(); render(); toast(`${cat.label} logged`);
+    }
+  }] : [{ label:'Close', cls:'btn ghost', run: closeSheet }];
+
+  openSheet(body, actions);
+
+  if (eligible.length && kind !== 'valid'){
+    const wrap = $('#picks');
+    eligible.forEach(c => {
+      const b = el('button','pick', `<span class="nm">${esc(c.name)}</span><span class="pill p-${c.stage === 'valid' ? 'valid' : 'fruit'}">${c.stage === 'valid' ? 'Valid' : 'Baptized'}</span>`);
+      b.onclick = () => { chosen = c.id; wrap.querySelectorAll('.pick').forEach(x => x.className = 'pick'); b.className = 'pick sel'; };
+      wrap.appendChild(b);
+    });
+  }
+}
+
+function openBackdate(){
+  openSheet(`<h2>Log for another day</h2><p class="hint">${DEFS.preaching}</p>
+    <label class="f">How many</label><input class="inp" id="bdCount" type="number" inputmode="numeric" min="1" value="1">
+    <label class="f">Date</label><input class="inp" id="bdDate" type="date" max="${today()}" value="${today()}">
+    <label class="f">Note (optional)</label><input class="inp" id="bdNote" autocomplete="off">`,
+    [{ label:'Save', cls:'btn', run: async () => {
+        const c = parseInt($('#bdCount').value, 10);
+        if (!c || c < 1) return toast('Enter at least 1', true);
+        await rpc('log_preaching', { p_member_id:me.id, p_pin:pin, p_count:c, p_date:$('#bdDate').value, p_note:$('#bdNote').value });
+        await loadStats(); closeSheet(); render(); toast('Saved');
+      }},
+     { label:'Cancel', cls:'btn ghost', run: closeSheet }]);
+}
+
+/* ---------- admin ---------- */
+
+function renderAdmin(){
+  const box = $('#s-admin'); box.innerHTML = '';
+
+  box.appendChild(el('div','ghead','<h2>Team</h2>'));
+  const card = el('div','card');
+  roster.forEach(m => {
+    const r = el('div','row',
+      `<div class="grow"><div class="nm">${esc(m.name)}${m.is_admin ? ' · admin' : ''}</div>
+        <div class="sub">${m.group_name === 'evangelist' ? 'Evangelist' : 'Member'}</div></div>
+       <span class="pill p-preach">Edit</span>`);
+    r.style.cursor = 'pointer';
+    r.onclick = () => memberSheet(m);
+    card.appendChild(r);
+  });
+  box.appendChild(card);
+  const add = el('button','btn','Add someone');
+  add.onclick = () => memberSheet(null);
+  box.appendChild(add);
+
+  box.appendChild(el('div','ghead','<h2>Targets and points</h2>'));
+  const g = el('div','card');
+  CATS.forEach(c => {
+    const r = el('div','row',
+      `<div class="grow"><div class="nm">${c.label}</div>
+        <div class="sub">Evangelist ${targetFor('evangelist',c.k)} · Member ${targetFor('member',c.k)} · ${num(pointFor(c.k))} pts each</div></div>
+       <span class="pill p-${c.cls}">Edit</span>`);
+    r.style.cursor = 'pointer';
+    r.onclick = () => goalSheet(c);
+    g.appendChild(r);
+  });
+  box.appendChild(g);
+  box.appendChild(el('p','rail-cap','Changes take effect from the 1st of this month. Past months keep the numbers they were scored with.'));
+
+  const ex = el('button','btn ghost','Export everything as CSV');
+  ex.onclick = doExport;
+  box.appendChild(ex);
+}
+
+function memberSheet(m){
+  openSheet(`<h2>${m ? esc(m.name) : 'Add someone'}</h2>
+    <label class="f">Name</label><input class="inp" id="mName" value="${m ? esc(m.name) : ''}" autocomplete="off">
+    <label class="f">Group</label>
+    <select class="inp" id="mGroup">
+      <option value="evangelist"${m && m.group_name === 'evangelist' ? ' selected' : ''}>Evangelist</option>
+      <option value="member"${!m || m.group_name === 'member' ? ' selected' : ''}>Member</option>
+    </select>
+    <label class="f">${m ? 'New PIN (leave blank to keep theirs)' : '4-digit PIN'}</label>
+    <input class="inp" id="mPin" inputmode="numeric" maxlength="4" placeholder="${m ? '••••' : '0000'}" autocomplete="off">
+    <label class="f"><input type="checkbox" id="mAdmin"${m && m.is_admin ? ' checked' : ''}> Give admin access</label>`,
+    [{ label: m ? 'Save changes' : 'Add to team', cls:'btn', run: async () => {
+        const name = $('#mName').value.trim();
+        if (!name) return toast('Name is required', true);
+        await rpc('admin_save_member', {
+          p_member_id:me.id, p_pin:pin, p_name:name, p_group:$('#mGroup').value,
+          p_new_pin:$('#mPin').value || null, p_is_admin:$('#mAdmin').checked, p_target_id: m ? m.id : null });
+        await loadAll(); closeSheet(); render(); toast(m ? 'Saved' : 'Added');
+      }},
+     ...(m && m.id !== me.id ? [{ label:'Remove from team', cls:'btn danger', run: async () => {
+        await rpc('admin_set_active', { p_member_id:me.id, p_pin:pin, p_target_id:m.id, p_active:false });
+        await loadAll(); closeSheet(); render(); toast('Removed. Their history is kept.');
+      }}] : []),
+     { label:'Cancel', cls:'btn ghost', run: closeSheet }]);
+}
+
+function goalSheet(c){
+  openSheet(`<h2>${c.label}</h2><p class="hint">${DEFS[c.k]}</p>
+    <label class="f">Evangelist target</label><input class="inp" id="gE" type="number" min="0" value="${targetFor('evangelist',c.k)}">
+    <label class="f">Member target</label><input class="inp" id="gM" type="number" min="0" value="${targetFor('member',c.k)}">
+    <label class="f">Points each</label><input class="inp" id="gP" type="number" min="0" value="${pointFor(c.k)}">`,
+    [{ label:'Save', cls:'btn', run: async () => {
+        await rpc('admin_set_goal',   { p_member_id:me.id, p_pin:pin, p_group:'evangelist', p_category:c.k, p_target:+$('#gE').value });
+        await rpc('admin_set_goal',   { p_member_id:me.id, p_pin:pin, p_group:'member',     p_category:c.k, p_target:+$('#gM').value });
+        await rpc('admin_set_points', { p_member_id:me.id, p_pin:pin, p_category:c.k, p_points:+$('#gP').value });
+        await loadAll(); closeSheet(); render(); toast('Updated');
+      }},
+     { label:'Cancel', cls:'btn ghost', run: closeSheet }]);
+}
+
+async function doExport(){
+  try {
+    const rows = await rpc('admin_export', { p_member_id:me.id, p_pin:pin });
+    const head = ['member','group','date','category','count','contact','note'];
+    const csv = [head.join(',')].concat(rows.map(r =>
+      [r.member, r.group_name, r.on_date, r.category, r.count, r.who || '', r.note || '']
+        .map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))).join('\n');
+    const a = el('a'); a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
+    a.download = `harvest-${today()}.csv`; a.click();
+    toast(`Exported ${rows.length} rows`);
+  } catch (e){ toast(e.message, true); }
+}
+
+boot();
+</script>
+</body>
+</html>
