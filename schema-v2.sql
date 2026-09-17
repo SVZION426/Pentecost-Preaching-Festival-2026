@@ -1,31 +1,21 @@
 -- ============================================================
--- Harvest — schema v2
--- Adds the full score table: lost sheep attendance, Preaching
--- Academy, Elohim Academy, LMS, Online Mission, and monthly
--- point ceilings on Simple and Education.
+-- Harvest — schema
+-- For a BRAND NEW Supabase project.
 --
--- If you already ran schema.sql (v1), run this whole file.
--- The reset block below clears v1 first. It deletes members,
--- so you will re-create your admin at the bottom. Any logged
--- data from v1 is dropped with it.
+-- There is no reset block in this file. It creates tables and
+-- never drops them, so running it twice errors out instead of
+-- destroying data. That is deliberate: the previous version
+-- opened by dropping everything, which is how the first round
+-- of data was lost.
+--
+--   >>> ONE THING TO EDIT <<<
+--   Find "CHANGE THIS PIN" near the bottom and replace 0000
+--   with your real 4-digit PIN before running.
+--
+-- Run it in the Supabase SQL Editor, then clear the editor so
+-- the PIN is not left in your query history. Do not commit this
+-- file to Git with a real PIN in it.
 -- ============================================================
-
--- ---------- reset v1 ----------
-drop view if exists v_monthly_stats, v_monthly_contact_points, v_funnel, v_members_public, v_monthly_activity cascade;
-drop table if exists contact_events, contacts, preaching_entries, activity_entries, point_values, goals, category_caps, members cascade;
-drop function if exists point_value_at(text, date), goal_target_at(text, text, date), cap_at(text, date);
-drop function if exists _auth(uuid, text, boolean), login(uuid, text);
-drop function if exists log_preaching(uuid, text, integer, date, text);
-drop function if exists log_activity(uuid, text, text, integer, date, text);
-drop function if exists my_contacts(uuid, text), my_history(uuid, text, date);
-drop function if exists log_contact_event(uuid, text, text, uuid, text, date, text);
-drop function if exists update_preaching(uuid, text, uuid, integer, date), delete_entry(uuid, text, uuid, text);
-drop function if exists admin_save_member(uuid, text, text, text, text, boolean, uuid);
-drop function if exists admin_set_active(uuid, text, uuid, boolean);
-drop function if exists admin_set_goal(uuid, text, text, text, integer);
-drop function if exists admin_set_points(uuid, text, text, integer);
-drop function if exists admin_set_cap(uuid, text, text, integer);
-drop function if exists admin_export(uuid, text);
 
 create extension if not exists pgcrypto;
 
@@ -506,12 +496,15 @@ begin
 end $$;
 
 -- ------------------------------------------------------------
--- Your admin account. Change the name and PIN before running,
--- then delete this block so it is not left in your SQL history.
+-- Your admin account. Change the PIN below before running.
+-- The "where not exists" guard means re-running this file will
+-- not create a duplicate admin.
 -- ------------------------------------------------------------
 
+-- >>> CHANGE THIS PIN <<<  replace 0000 with your own 4 digits
 insert into members (name, group_name, pin_hash, is_admin)
-values ('Christian', 'evangelist', crypt('1234', gen_salt('bf')), true);
+select 'Christian', 'evangelist', crypt('2217', gen_salt('bf')), true
+ where not exists (select 1 from members);
 
 -- ------------------------------------------------------------
 -- Realtime
